@@ -4,6 +4,8 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -13,6 +15,7 @@ import kotlinx.coroutines.runBlocking
 import kotlin.concurrent.thread
 import kotlin.random.Random
 
+val paises = listOf("Chile","Venezuela","Colombia","Brasil","Argentina","Uruguay","Peru","Bolivia")
 fun main()
 {
     //globalScope()
@@ -21,8 +24,101 @@ fun main()
     //job()
     //basicFlows() //flow es un tipo de corrutina
     //nestedCourutines()
-    excepcions()
+    //excepcions()
+    //basicChannel()
+    //bufferChannel()
+    closeChannel()
 
+}
+
+fun closeChannel() {
+    runBlocking {
+
+        println("Cerrar un canal")
+        val channel = Channel<String>()
+        launch {
+
+            paises.forEach {
+
+                channel.send(it)
+                if (it.equals("Brasil"))
+                {
+                    //channel.close()
+                    return@launch
+
+                }
+
+            }
+
+        }
+
+        /*
+        for (value in channel)
+        {
+            println(value)
+        }
+        */
+
+
+        while (!channel.isClosedForReceive)
+        {
+            println(channel.receive())
+
+        }
+
+    }
+}
+
+fun bufferChannel() {
+    runBlocking {
+        println("Buffer para channels")
+        //time: guarda el tiempo inicial
+        val time = System.currentTimeMillis() //almacena el tiempo actual en milisegundos
+        val channel = Channel<String>()
+            launch {
+                paises.forEach {
+                    delay(200)
+                    channel.send(it)
+                }
+                //channel.close()
+
+
+            }// fin corrutina 1
+
+            //segunda corrutina
+
+            launch {
+
+                delay(800)
+                channel.consumeEach { println(it) }
+                println("Tiempo: ${System.currentTimeMillis()-time}ms")
+
+            }
+
+
+
+    }
+}
+
+fun basicChannel() {
+
+    runBlocking {
+        println("Canal básico")
+        val channel = Channel<String>()
+        launch {
+
+            paises.forEach {
+                channel.send(it) //it: cambiar de valor dependiendo de la lectura de la lista
+            }
+
+        }
+
+        for (value in channel)
+        {
+            println(value)
+        }
+
+    }
 }
 
 //completar
